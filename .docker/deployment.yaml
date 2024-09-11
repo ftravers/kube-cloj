@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-clojure-app-deployment
+  labels:
+    app: my-clojure-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-clojure-app
+  template:
+    metadata:
+      labels:
+        app: my-clojure-app
+    spec:
+      containers:
+      - name: my-clojure-app-deployment
+        image: fenton/my-clojure-app
+        resources:
+          requests:
+            cpu: "100m"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
