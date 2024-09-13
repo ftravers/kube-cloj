@@ -1,0 +1,83 @@
+* Overview
+
+Simple example of using clojure with kubernetes (minikube).
+
+* Pre-requisites
+
+Install minikube on your computer.
+
+** build and upload image to docker hub
+
+https://hub.docker.com/
+
+In console from project root, check which images you have:
+
+: docker image list
+
+build your image
+
+: docker build -t fenton/my-clojure-app .
+
+push image to docker image repository
+
+: docker push fenton/my-clojure-app
+
+remove the image from local docker
+
+: docker rmi -f fenton/my-clojure-app
+
+* Steps
+
+After cloning this repo, start minikube
+
+: minikube start
+
+From console, in folder: ~kube-cloj/.kube/~, apply the deployment and
+the service.
+
+: kubectl apply -f deployment.yaml
+: kubectl apply -f node-port-service.yaml
+
+Find out the IP address of the cluster with:
+
+: minikube ip
+
+Mine returned: 192.168.49.2, so I'll curl for the website at:
+
+: curl 192.168.49.2:30007
+Hello, World!
+
+* Breaking it down
+
+** Clojure code
+
+: src/clj_dok/core.clj
+
+#+begin_src clojure -n
+(ns clj-dok.core
+  (:require [ring.adapter.jetty :as jetty]
+            [ring.middleware.params :as params]
+            [ring.util.response :as response]))
+
+(defn handler [request]
+  (let [params (:params request)]
+    (response/response (str "Hello, " (or (:name params) "World!") "\n"))))
+
+(def app
+  (-> handler
+      (params/wrap-params)))
+
+(def server (atom nil))
+
+(defn -main []
+  (reset! server (jetty/run-jetty app {:port 3000 :join? false}))
+  ;; 
+  )
+
+(comment
+  (-main)
+  (.stop @server)
+
+  ;; 
+  )
+#+end_src
