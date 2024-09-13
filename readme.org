@@ -18,7 +18,46 @@ build your image
 
 : docker build -t fenton/my-clojure-app .
 
-push image to docker image repository
+* Steps
+
+After cloning this repo, * Breaking it down
+
+** Clojure code
+
+: src/clj_dok/core.clj
+
+The following lines starts a webserver that spits out "Hello, World!",
+this is served on port 3000.
+
+#+begin_src clojure
+  ...
+  ;; spit out Hello, World!
+  (response/response (str "Hello, " (or (:name params) "World!") "\n"))))
+
+  ;; Start webserver on port 3000
+  (reset! server (jetty/run-jetty app {:port 3000 :join? false}))
+  ...
+#+end_src
+
+Run this from project root, check it works and stop it.
+
+: clj -m clj-dok.core
+: curl localhost:3000
+Hello, World!
+
+** Verify running in Docker Container
+
+build your image, run mapping 8080 -> 3000, test, stop.
+
+: docker build -t fenton/my-clojure-app .
+: docker run -p 8080:3000 fenton/my-clojure-app
+: curl localhost:8080
+Hello, World!
+
+** Push to docker hub
+
+push image to docker image repository (change 'fenton' to your docker
+hub username)
 
 : docker push fenton/my-clojure-app
 
@@ -26,10 +65,11 @@ remove the image from local docker
 
 : docker rmi -f fenton/my-clojure-app
 
-* Steps
+** Kubernetes (minikube)
 
-After cloning this repo, start minikube
+clean up minikube, start minikube 
 
+: minikube delete
 : minikube start
 
 From console, in folder: ~kube-cloj/.kube/~, apply the deployment and
@@ -47,37 +87,35 @@ Mine returned: 192.168.49.2, so I'll curl for the website at:
 : curl 192.168.49.2:30007
 Hello, World!
 
-* Breaking it down
+Lets examine the deployments.yaml file (elided less important rows).
 
-** Clojure code
-
-: src/clj_dok/core.clj
-
-#+begin_src clojure -n
-(ns clj-dok.core
-  (:require [ring.adapter.jetty :as jetty]
-            [ring.middleware.params :as params]
-            [ring.util.response :as response]))
-
-(defn handler [request]
-  (let [params (:params request)]
-    (response/response (str "Hello, " (or (:name params) "World!") "\n"))))
-
-(def app
-  (-> handler
-      (params/wrap-params)))
-
-(def server (atom nil))
-
-(defn -main []
-  (reset! server (jetty/run-jetty app {:port 3000 :join? false}))
-  ;; 
-  )
-
-(comment
-  (-main)
-  (.stop @server)
-
-  ;; 
-  )
+#+begin_src yaml
+spec:
+  replicas: 2   <--- how many pods/containers to have
+  template:
+    spec:
+      containers:
+        image: fenton/my-clojure-app  <--- docker hub image to pull down
+        resources:
+          requests:
+            cpu: "100m"  <--- use 10% of a single CPU
+        ports:
+        - containerPort: 3000  <--- which port the containers will expose
 #+end_src
+
+The above will deploy the pods/containers in kubernetes private
+network cluster.  So we need to expose an external port.  For that we
+use the file: ~node-port-service.yaml~
+
+(elided less important rows)
+
+#+begin_src yaml
+spec:
+  ports:
+      port: 30000       # Port to access inside the cluster, we wont
+                        # really use this at all
+      targetPort: 3000  # Port of the container
+      nodePort: 30007   # The port to expose on the Minikube node (between 30000-32767)
+  type: NodePort
+#+end_src
+
