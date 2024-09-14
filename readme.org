@@ -4,25 +4,9 @@ Simple example of using clojure with kubernetes (minikube).
 
 * Pre-requisites
 
-Install minikube on your computer.
+Install minikube, docker, clojure, etc on your computer.
 
-** build and upload image to docker hub
-
-https://hub.docker.com/
-
-In console from project root, check which images you have:
-
-: docker image list
-
-build your image
-
-: docker build -t fenton/my-clojure-app .
-
-* Steps
-
-After cloning this repo, * Breaking it down
-
-** Clojure code
+* Clojure code
 
 : src/clj_dok/core.clj
 
@@ -45,7 +29,7 @@ Run this from project root, check it works and stop it.
 : curl localhost:3000
 Hello, World!
 
-** Verify running in Docker Container
+* Verify running in Docker Container
 
 build your image, run mapping 8080 -> 3000, test, stop.
 
@@ -54,7 +38,7 @@ build your image, run mapping 8080 -> 3000, test, stop.
 : curl localhost:8080
 Hello, World!
 
-** Push to docker hub
+* Push to docker hub
 
 push image to docker image repository (change 'fenton' to your docker
 hub username)
@@ -65,7 +49,7 @@ remove the image from local docker
 
 : docker rmi -f fenton/my-clojure-app
 
-** Kubernetes (minikube)
+* Kubernetes (minikube)
 
 clean up minikube, start minikube 
 
