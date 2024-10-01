@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-clojure-app-deployment
+  labels:
+    app: my-clojure-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-clojure-app
+  template:
+    metadata:
+      labels:
+        app: my-clojure-app
+    spec:
+      containers:
+      - name: my-clojure-app-name
+        image: fenton/my-clojure-app
+        resources:
+          requests:
+            cpu: "100m"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+
+---
+# Source: onechart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: blah-app
+  namespace: default
+  labels:
+    helm.sh/chart: onechart-0.73.0
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: blah-app
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: my-clojure-app
+---
+
+# My load balancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: blah-lb
+  annotations:
+    load-balancer.hetzner.cloud/location: nbg1 
+spec:
+  selector:
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: blah-app
+  # selector:
+  #   app: blah-app
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  # ports:
+  #   - port: 8765
+  #     targetPort: 9376
+  type: LoadBalancer

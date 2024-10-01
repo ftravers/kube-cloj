@@ -103,3 +103,103 @@ spec:
   type: NodePort
 #+end_src
 
+
+
+* Trying to get load-balancer working with clojure [0/3]
+** Debugging
+
+We can look at the logs of the hcloud-cloud-controller-manager to see
+why the load balancer is unhealthy
+
+ - get all the PODS and look for *hcloud-cloud-controller-manager-...*
+
+Then we can look at the logs for that with:
+
+: kcgp -A
+NAMESPACE        NAME                                               READY   STATUS    RESTARTS   AGE
+...
+kube-system      hcloud-cloud-controller-manager-5bb66cfc55-hlw47   1/1     Running   0          51m
+
+
+: kc logs -n kube-system hcloud-cloud-controller-manager-5bb66cfc55-hlw47
+** Steps
+
+
+
+ - [ ] create cluster
+ 
+This is the base cluster: machine, networking, etc..
+
+: cd ~/projects/kube-cloj/hetzner
+: hetzner-k3s create --config cluster-config.yaml
+
+Wait 2:49 (mm:ss).
+
+Check hetzner: https://console.hetzner.cloud/usage
+
+- [ ] sample deployment
+
+This is the project the guy uses in the video:
+
+https://www.youtube.com/watch?v=u5l-F8nPumE&list=PLa6U5rUhfdnRFytiEKqVS9X8uJRTopC0u
+
+: cd ../helm-example
+: kc apply -f .
+: curl http://49.13.43.189/
+
+*NOTE* cannot go here with regular browser as they all enforce httpS
+*always* even if you type http://
+
+*NOTE* curl'ing to http works, https doesn't work...as expected.
+
+: kubectl delete -f .
+
+*ODD* even after i do above curl is still fetching site?  Is it
+cached?  Why could that be?
+
+Okay do a hard removal of the server and verify curl not working any
+longer.
+
+: cd ~/projects/kube-cloj/hetzner
+: hetzner-k3s delete --config cluster-config.yaml
+
+*WEIRD* STILL curl works....hmmm...must be some kind of cache or something...
+
+*NOTE* Cannot port-forward to svc/blah-app but *can* to svc/blah-lb,
+i.e. the load-balancer.
+
+ - [ ] move example towards clojure
+
+Current failure when deploy clojure version: 
+
+Here is the helm-example output:
+
+➜  helm-example git:(master) ✗ kc apply -f .
+service/blah-app created
+service/blah-lb created
+deployment.apps/blah-app created
+➜  helm-example git:(master) ✗ kcg svc         
+NAME         TYPE           CLUSTER-IP      EXTERNAL-IP                                  PORT(S)        AGE
+blah-app     ClusterIP      10.43.151.229   <none>                                       80/TCP         19s
+blah-lb      LoadBalancer   10.43.44.27     10.1.0.3,2a01:4f8:1c1d:42b::1,49.13.43.189   80:32631/TCP   18s
+kubernetes   ClusterIP      10.43.0.1       <none>                                       443/TCP        6m4s
+
+➜  cloj-k8s git:(master) ✗ kc apply -f deployment.yaml 
+deployment.apps/my-clojure-app-deployment created
+service/blah-app created
+service/blah-lb created
+➜  cloj-k8s git:(master) ✗ kcg all
+NAME                                            READY   STATUS              RESTARTS   AGE
+pod/my-clojure-app-deployment-8489d55cc-kggpz   0/1     ContainerCreating   0          15s
+pod/my-clojure-app-deployment-8489d55cc-nhz2n   0/1     ContainerCreating   0          15s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                  PORT(S)        AGE
+service/blah-app     ClusterIP      10.43.77.242    <none>                                       80/TCP         16s
+service/blah-lb      LoadBalancer   10.43.148.212   10.1.0.3,2a01:4f8:1c1d:42b::1,49.13.43.189   80:32320/TCP   16s
+service/kubernetes   ClusterIP      10.43.0.1       <none>                                       443/TCP        39m
+
+NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/my-clojure-app-deployment   2/2     2            2           18s
+
+NAME                                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/my-clojure-app-deployment-8489d55cc   2         2         2       19s

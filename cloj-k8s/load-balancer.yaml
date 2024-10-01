@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-lb-service
+  annotations:
+    load-balancer.hetzner.cloud/location: nbg1 
+    load-balancer.hetzner.cloud/use-private-ip: "true"
+
+# ensures the traffic between LB and nodes goes through the private
+# network, so you don't need to change anything in the firewall
+
+
+# load-balancer.hetzner.cloud/hostname: fenton.page
+# load-balancer.hetzner.cloud/http-redirect-https: 'false'
+# load-balancer.hetzner.cloud/name: my-load-balancer
+# load-balancer.hetzner.cloud/uses-proxyprotocol: 'true'
+
+spec:
+  selector:
+    app.kubernetes.io/name:
+    app.kubernetes.io/instance:
+    app: my-clojure-app
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http
+      targetPort: 80
+  type: LoadBalancer

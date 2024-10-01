@@ -1,0 +1,14 @@
+Usage:
+  hetzner-k3s [flags...] [arg...]
+
+hetzner-k3s - A tool to create k3s clusters on Hetzner Cloud
+
+Flags:
+  --help     # Displays help for the current command.
+  --version  # Displays the version of the current application.
+
+Subcommands:
+  create     # Create a cluster
+  delete     # Delete a cluster
+  releases   # List the available k3s releases
+  upgrade    # Upgrade a cluster to a new version of k3s
