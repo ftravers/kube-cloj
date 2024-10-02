@@ -17,11 +17,12 @@ spec:
         app: bbb
     spec:
       containers:
-      - image: nginx:latest
+#      - image: nginx:latest
+      - image: fenton/my-clojure-app
         imagePullPolicy: IfNotPresent
         name: blah-app
         ports:
-        - containerPort: 80
+        - containerPort: 3000
           name: node-port-name
         resources:
           limits:
