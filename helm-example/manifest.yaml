@@ -22,8 +22,7 @@ spec:
         name: blah-app
         ports:
         - containerPort: 80
-          name: http
-          protocol: TCP
+          name: node-port-name
         resources:
           limits:
             cpu: 200m
@@ -47,9 +46,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: http
-      protocol: TCP
-      name: http
+      targetPort: node-port-name
   selector:
     app: bbb
 
@@ -65,7 +62,5 @@ spec:
     app: bbb
   ports:
     - port: 80
-      targetPort: http
-      protocol: TCP
-      name: http
+      targetPort: node-port-name
   type: LoadBalancer
