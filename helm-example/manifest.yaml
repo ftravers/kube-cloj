@@ -2,28 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: blah-app
+  name: blah-app-not-used
   namespace: default
   labels:
-    helm.sh/chart: onechart-0.73.0
-    app.kubernetes.io/name: onechart
-    app.kubernetes.io/instance: blah-app
-    app.kubernetes.io/managed-by: Helm
+    app: bbb
   annotations:
     kubectl.kubernetes.io/default-container: blah-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: onechart
-      app.kubernetes.io/instance: blah-app
+      app: bbb
   template:
     metadata:
       annotations:
         checksum/config: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
       labels:
-        app.kubernetes.io/name: onechart
-        app.kubernetes.io/instance: blah-app
+        app: bbb
     spec:
       containers:
       - image: nginx:latest
@@ -46,17 +41,12 @@ spec:
         fsGroup: 999
 
 ---
-# Source: onechart/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: blah-app
+  name: blah-app-service
   namespace: default
   labels:
-    helm.sh/chart: onechart-0.73.0
-    app.kubernetes.io/name: onechart
-    app.kubernetes.io/instance: blah-app
-    app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
   ports:
@@ -65,14 +55,9 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: onechart
-    app.kubernetes.io/instance: blah-app
-
-
-
+    app: bbb
 
 ---
-# My load balancer
 apiVersion: v1
 kind: Service
 metadata:
@@ -81,29 +66,10 @@ metadata:
     load-balancer.hetzner.cloud/location: nbg1 
 spec:
   selector:
-    app.kubernetes.io/name: onechart
-    app.kubernetes.io/instance: blah-app
-  # selector:
-  #   app: blah-app
+    app: bbb
   ports:
     - port: 80
       targetPort: http
       protocol: TCP
       name: http
-  # ports:
-  #   - port: 8765
-  #     targetPort: 9376
   type: LoadBalancer
----
-
-
-
-
-
-
-
-
-
-
-
-
