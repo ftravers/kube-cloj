@@ -6,8 +6,6 @@ metadata:
   namespace: default
   labels:
     app: bbb
-  annotations:
-    kubectl.kubernetes.io/default-container: blah-app
 spec:
   replicas: 1
   selector:
@@ -15,8 +13,6 @@ spec:
       app: bbb
   template:
     metadata:
-      annotations:
-        checksum/config: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
       labels:
         app: bbb
     spec:
